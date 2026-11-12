@@ -10,33 +10,33 @@ def load_records():
 # 2. Search articles using a keyword
 def search(records, keyword):
     results = []
-
-    keyword = keyword.lower()
+    keyword = keyword.lower().strip()
 
     for article in records:
-        if (keyword in article["text"].lower()
+        if (
+            keyword in article["text"].lower()
             or keyword in article["title"].lower()
             or keyword in article["article_no"].lower()
-            or keyword in article["category"].lower()):
-
+            or keyword in article["part"].lower()
+        ):
             results.append(article)
 
     return results
 
 
-# 3. Count articles category-wise
+# 3. Count articles part-wise
 def count_by(records):
-    category_count = {}
+    part_count = {}
 
     for article in records:
-        category = article["category"]
+        part = article["part"]
 
-        if category in category_count:
-            category_count[category] += 1
+        if part in part_count:
+            part_count[part] += 1
         else:
-            category_count[category] = 1
+            part_count[part] = 1
 
-    return category_count
+    return part_count
 
 
 # 4. Get an article using its article number
