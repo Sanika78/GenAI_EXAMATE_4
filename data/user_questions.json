@@ -1,0 +1,53 @@
+
+[
+  {
+    "id": 1,
+    "question": "What is Article 14 of the Indian Constitution?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 2,
+    "question": "What freedoms are guaranteed under Article 19?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 3,
+    "question": "What does Article 21 say about the right to life and personal liberty?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 4,
+    "question": "What is the age limit for free and compulsory education under Article 21A?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 5,
+    "question": "Which Article abolishes untouchability in India?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 6,
+    "question": "How many people were arrested under UAPA in Maharashtra during 2024?",
+    "answerable_with_current_data": false
+  },
+  {
+    "id": 7,
+    "question": "What protection does Article 20 provide to accused persons?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 8,
+    "question": "What does Article 25 say about freedom of religion?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 9,
+    "question": "How can a citizen approach the Supreme Court to protect Fundamental Rights under Article 32?",
+    "answerable_with_current_data": true
+  },
+  {
+    "id": 10,
+    "question": "What is the difference between Article 14 and Article 15?",
+    "answerable_with_current_data": true
+  }
+]
