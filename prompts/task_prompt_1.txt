@@ -1,0 +1,14 @@
+
+Answer the following question about the Constitution of India.
+
+Question: {question}
+
+Instructions:
+- Use simple and clear language.
+- Mention the relevant Article.
+- Give a simple example if useful.
+- Do not invent information.
+- If information is unavailable, clearly mention it.
+
+Return only valid JSON with:
+answer, confidence, follow_up.

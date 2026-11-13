@@ -1,0 +1,20 @@
+
+Analyze the following question about the Constitution of India.
+
+Question: {question}
+
+Follow these steps:
+
+1. Identify the constitutional topic.
+2. Identify the relevant Article.
+3. Explain the provision in simple language.
+4. Give a practical example if appropriate.
+5. Check whether the question can be answered
+   using reliable constitutional information.
+6. If information is unavailable or requires
+   current external data, clearly say so.
+
+Do not guess or fabricate facts.
+
+Return only valid JSON with:
+answer, confidence, follow_up.
