@@ -1,7 +1,7 @@
 
 from pathlib import Path
 import json
-
+from app.vectorstore import semantic_search
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -174,7 +174,30 @@ def ask_question(request: QuestionRequest):
         "results": results
     }
 
+@app.get("/search/semantic")
+def semantic_search_api(q: str = Query(..., min_length=1)):
+    question = q.strip()
 
+    if not question:
+        raise HTTPException(
+            status_code=400,
+            detail="Search query cannot be empty"
+        )
+
+    try:
+        results = semantic_search(question, limit=5)
+
+        return {
+            "query": question,
+            "total_results": len(results),
+            "results": results
+        }
+
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Semantic search is currently unavailable."
+        )
 # -------------------------------
 # AI Chat API with Prompt Versioning
 # -------------------------------

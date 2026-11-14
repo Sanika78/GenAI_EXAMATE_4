@@ -7,33 +7,43 @@ from pypdf import PdfReader
 from app.models import Record
 
 
-PDF_PATH = Path("data/raw/constitution.pdf")
-OUTPUT_PATH = Path("data/records.json")
+BASE_DIR = Path(__file__).resolve().parent.parent
+PDF_PATH = BASE_DIR / "data" / "raw" / "constitution.pdf"
+OUTPUT_PATH = BASE_DIR / "data" / "records.json"
+
+
+# Match headings such as:
+# 21. Protection of life and personal liberty.—
+ARTICLE_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?P<number>\d{1,3}[A-Z]?)\.\s+"
+    r"(?P<title>[A-Z][^—–]{2,180}?)"
+    r"\s*(?:\.)?\s*[—–]\s*"
+)
 
 
 def join_wrapped_lines(text):
-    """
-    Join PDF lines that are wrapped across multiple lines.
-    Preserve paragraph boundaries.
-    """
-    lines = text.splitlines()
-    cleaned_lines = []
+    """Join wrapped PDF lines while keeping readable spacing."""
+    lines = []
 
-    for line in lines:
+    for line in text.splitlines():
         line = line.strip()
-
         if line:
-            cleaned_lines.append(line)
+            lines.append(line)
 
-    return " ".join(cleaned_lines)
+    return " ".join(lines)
 
 
 def get_part(article_no):
     """Identify the Constitution Part using article number ranges."""
-    try:
-        number = int(re.match(r"\d+", article_no).group())
-    except (AttributeError, ValueError):
+
+    match = re.fullmatch(r"(\d+)([A-Z]*)", str(article_no).upper())
+
+    if not match:
         return "Not identified"
+
+    number = int(match.group(1))
+    suffix = match.group(2)
 
     if number <= 4:
         return "Part I"
@@ -43,44 +53,49 @@ def get_part(article_no):
         return "Part III"
     elif number <= 51:
         return "Part IV"
-    elif article_no == "51A":
+    elif number == 51 and suffix == "A":
         return "Part IVA"
-    elif number <= 151:
+    elif 52 <= number <= 151:
         return "Part V"
-    elif number <= 237:
+    elif 152 <= number <= 237:
         return "Part VI"
-    elif number <= 242:
+    elif 238 <= number <= 242:
         return "Part VIII"
-    elif number <= 243:
-        return "Part IX"
-    elif number <= 243:
-        return "Part IX"
-    elif number <= 244:
+    elif number == 243:
+        if suffix == "":
+            return "Part IX"
+        if suffix == "P" or suffix.startswith(("Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")):
+            return "Part IXA"
+    elif 244 <= number <= 244:
         return "Part X"
-    elif number <= 263:
+    elif 245 <= number <= 263:
         return "Part XI"
-    elif number <= 300:
+    elif 264 <= number <= 300:
         return "Part XII"
-    elif number <= 307:
+    elif 301 <= number <= 307:
         return "Part XIII"
-    elif number <= 323:
+    elif 308 <= number <= 323:
         return "Part XIV"
-    elif number <= 323:
-        return "Part XIV"
-    elif number <= 329:
+    elif number == 323 and suffix in ("A", "B"):
+        return "Part XIVA"
+    elif 324 <= number <= 329:
         return "Part XV"
-    elif number <= 342:
+    elif 330 <= number <= 342:
         return "Part XVI"
-    elif number <= 351:
+    elif 343 <= number <= 351:
         return "Part XVII"
-    elif number <= 360:
+    elif 352 <= number <= 360:
         return "Part XVIII"
-    elif number <= 367:
+    elif 361 <= number <= 367:
         return "Part XIX"
     elif number == 368:
         return "Part XX"
-    else:
-        return "Part XXI / XXII"
+    elif 369 <= number <= 392:
+        return "Part XXI"
+    elif 393 <= number <= 395:
+        return "Part XXII"
+
+    return "Not identified"
 
 
 def extract_pdf_text():
@@ -95,8 +110,6 @@ def extract_pdf_text():
 
     for page_number, page in enumerate(reader.pages, start=1):
         raw_text = page.extract_text() or ""
-
-        # Join wrapped lines BEFORE article extraction
         cleaned_text = join_wrapped_lines(raw_text)
 
         if cleaned_text:
@@ -108,10 +121,29 @@ def extract_pdf_text():
     return page_texts
 
 
+def get_page_for_position(position, page_ranges):
+    """Find the PDF page containing a text position."""
+
+    for page_range in page_ranges:
+        if page_range["start"] <= position < page_range["end"]:
+            return page_range["page"]
+
+    return 0
+
+
+def article_sort_key(article_no):
+    """Create a sortable key for article numbers such as 21 and 21A."""
+
+    match = re.fullmatch(r"(\d+)([A-Z]*)", article_no.upper())
+
+    if not match:
+        return -1, ""
+
+    return int(match.group(1)), match.group(2)
+
+
 def parse_articles(page_texts):
-    """
-    Identify article headings and extract their titles and text.
-    """
+    """Extract actual article headings and their corresponding text."""
 
     full_text = ""
     page_ranges = []
@@ -127,43 +159,75 @@ def parse_articles(page_texts):
             "page": item["page"]
         })
 
-    # Article headings generally contain a number, title and em dash.
-    article_pattern = re.compile(
-        r"(?<![A-Za-z0-9])"
-        r"(\d{1,3}[A-Z]?)\.\s+"
-        r"([A-Z][^—–]{2,180}?)"
-        r"\s*\.?\s*[—–]"
-    )
+    matches = list(ARTICLE_PATTERN.finditer(full_text))
 
-    matches = list(article_pattern.finditer(full_text))
+    # Ignore table-of-contents entries and start from Article 1.
+    start_index = None
 
-    if not matches:
+    for i, match in enumerate(matches):
+        article_no = match.group("number")
+        title = match.group("title").strip(" .")
+
+        if (
+            article_no == "1"
+            and title.lower().startswith("name and territory of the union")
+        ):
+            start_index = i
+            break
+
+    if start_index is None:
         raise ValueError(
-            "No article headings found. Check the PDF format and heading pattern."
+            "Could not find the actual Article 1 heading. "
+            "Check the PDF text extraction."
         )
+
+    matches = matches[start_index:]
+
+    # Remove false matches from footnotes and other text
+    # by keeping article numbers in increasing order.
+    valid_matches = []
+    last_key = (-1, "")
+
+    for match in matches:
+        article_no = match.group("number")
+        current_key = article_sort_key(article_no)
+
+        if current_key > last_key:
+            valid_matches.append(match)
+            last_key = current_key
 
     records = []
 
-    for index, match in enumerate(matches):
-        article_no = match.group(1).strip()
-        title = match.group(2).strip().rstrip(" .")
+    for index, match in enumerate(valid_matches):
+        article_no = match.group("number")
+        title = match.group("title").strip(" .")
 
         content_start = match.end()
 
-        if index + 1 < len(matches):
-            content_end = matches[index + 1].start()
+        if index + 1 < len(valid_matches):
+            content_end = valid_matches[index + 1].start()
         else:
             content_end = len(full_text)
 
         article_text = full_text[content_start:content_end].strip()
 
-        # Find the PDF page containing this article heading
-        source_page = 0
+        # Remove common amendment-footnote text from the end.
+        footnote_pattern = re.compile(
+            r"\s+\d+\.\s+"
+            r"(?:Ins\. by|Subs\. by|Omitted by|"
+            r"The words|Certain words|Cl\.)",
+            re.IGNORECASE
+        )
 
-        for page_range in page_ranges:
-            if page_range["start"] <= match.start() < page_range["end"]:
-                source_page = page_range["page"]
-                break
+        footnote_match = footnote_pattern.search(article_text)
+
+        if footnote_match:
+            article_text = article_text[:footnote_match.start()].strip()
+
+        source_page = get_page_for_position(
+            match.start(),
+            page_ranges
+        )
 
         if not title or not article_text:
             continue
@@ -210,19 +274,33 @@ def main():
 
     page_texts = extract_pdf_text()
 
-    print("Cleaning and joining wrapped lines...")
+    print("Extracting Constitution articles...")
 
     records = parse_articles(page_texts)
 
+    if not records:
+        raise ValueError("No valid article records were extracted.")
+
     save_records(records)
 
-    print("\nFirst 3 extracted articles:")
+    print("\nFirst 10 extracted articles:")
 
-    for record in records[:3]:
+    for record in records[:10]:
         print("\nArticle:", record.article_no)
         print("Title:", record.title)
-        print("Text:", record.text[:250])
+        print("Part:", record.part)
+        print("Text:", record.text[:200])
         print("Source page:", record.source_page)
+
+    article_21 = next(
+        (r for r in records if r.article_no == "21"),
+        None
+    )
+
+    if article_21:
+        print("\nARTICLE 21 CHECK")
+        print("Title:", article_21.title)
+        print("Text:", article_21.text[:500])
 
 
 if __name__ == "__main__":
