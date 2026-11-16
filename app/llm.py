@@ -67,13 +67,10 @@ def call_gemini(prompt):
                 raise
 
 
-def call_groq(prompt):
 
+def call_groq(prompt):
     api_key = os.getenv("GROQ_API_KEY")
-    model = os.getenv(
-        "GROQ_MODEL",
-        "llama-3.3-70b-versatile"
-    )
+    model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
     if not api_key:
         raise ValueError("GROQ_API_KEY is missing")
@@ -83,18 +80,12 @@ def call_groq(prompt):
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
+            {"role": "user", "content": prompt}
         ],
-        response_format={
-            "type": "json_object"
-        }
+        response_format={"type": "json_object"}
     )
 
     return response.choices[0].message.content
-
 
 def parse_response(raw_response):
 

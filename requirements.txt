@@ -1,9 +1,9 @@
 fastapi
 uvicorn
-python-dotenv
-google-genai
-groq
 pandas
 scikit-learn
 requests
 pypdf
+python-dotenv
+sentence-transformers
+chromadb

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.llm import ask_llm
 from app.smart_search import search_records
-
+from app.rag import ask_with_rag
 
 # -------------------------------
 # FastAPI Application
@@ -31,6 +31,10 @@ class QuestionRequest(BaseModel):
 class ChatRequest(BaseModel):
     question: str
     prompt_version: int = 1
+
+class AskRequest(BaseModel):
+    question: str
+    top_k: int = 4
 
 
 # -------------------------------
@@ -232,4 +236,25 @@ def chat(request: ChatRequest):
         raise HTTPException(
             status_code=503,
             detail="LLM provider failed. Check the server terminal."
+        )
+
+@app.post("/ask")
+def ask_endpoint(request: AskRequest):
+
+    if not request.question.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Question cannot be empty"
+        )
+
+    try:
+        return ask_with_rag(
+            request.question,
+            top_k=request.top_k
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"RAG error: {str(e)}"
         )

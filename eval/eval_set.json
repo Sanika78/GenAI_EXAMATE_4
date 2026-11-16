@@ -1,0 +1,78 @@
+
+[
+  {
+    "id": 1,
+    "question": "What does Article 12 define?",
+    "expected_article": "12"
+  },
+  {
+    "id": 2,
+    "question": "What does Article 13 say about laws inconsistent with fundamental rights?",
+    "expected_article": "13"
+  },
+  {
+    "id": 3,
+    "question": "What does equality before the law mean?",
+    "expected_article": "14"
+  },
+  {
+    "id": 4,
+    "question": "Which article prohibits discrimination on grounds of religion, race, caste, sex or place of birth?",
+    "expected_article": "15"
+  },
+  {
+    "id": 5,
+    "question": "Which article provides equality of opportunity in public employment?",
+    "expected_article": "16"
+  },
+  {
+    "id": 6,
+    "question": "What is the legal procedure for purchasing property on Mars under the Indian Constitution?",
+    "expected_article": "UNKNOWN"
+  },
+  {
+    "id": 7,
+    "question": "Which article abolishes untouchability?",
+    "expected_article": "17"
+  },
+  {
+    "id": 8,
+    "question": "Which article guarantees freedom of speech and expression?",
+    "expected_article": "19"
+  },
+  {
+    "id": 9,
+    "question": "Which article protects life and personal liberty?",
+    "expected_article": "21"
+  },
+  {
+    "id": 10,
+    "question": "Which article provides the right to education for children?",
+    "expected_article": "21A"
+  },
+  {
+    "id": 11,
+    "question": "Which article protects freedom of conscience and religion?",
+    "expected_article": "25"
+  },
+  {
+    "id": 12,
+    "question": "Which article gives the right to constitutional remedies?",
+    "expected_article": "32"
+  },
+  {
+    "id": 13,
+    "question": "Where are the Fundamental Duties mentioned?",
+    "expected_article": "51A"
+  },
+  {
+    "id": 14,
+    "question": "Which article protects the interests of minorities in establishing educational institutions?",
+    "expected_article": "30"
+  },
+  {
+    "id": 15,
+    "question": "Which article deals with the protection of monuments and places of national importance?",
+    "expected_article": "49"
+  }
+]
