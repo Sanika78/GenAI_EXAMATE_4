@@ -1,4 +1,4 @@
-
+from app.agent_loop import run_agent
 from pathlib import Path
 import json
 from app.vectorstore import semantic_search
@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 from app.llm import ask_llm
 from app.smart_search import search_records
 from app.rag import ask_with_rag
+from app.graph import run_graph
+
 
 # -------------------------------
 # FastAPI Application
@@ -35,8 +37,15 @@ class ChatRequest(BaseModel):
 class AskRequest(BaseModel):
     question: str
     top_k: int = 4
+class AgentRequest(BaseModel):
+    question: str = Field(..., min_length=1)
+    top_k: int = Field(default=4, ge=1, le=10)
 
 
+class AgentRequest(BaseModel):
+    question: str = ""
+    thread_id: str = Field(..., min_length=1)
+    approved: bool | None = None
 # -------------------------------
 # Data File Path
 # -------------------------------
@@ -258,3 +267,42 @@ def ask_endpoint(request: AskRequest):
             status_code=500,
             detail=f"RAG error: {str(e)}"
         )
+
+
+
+    # -------------------------------
+# Agent API
+# -------------------------------
+
+@app.post("/agent")
+def agent_endpoint(request: AgentRequest):
+
+    try:
+        result = run_graph(
+            question=request.question,
+            thread_id=request.thread_id,
+            approved=request.approved
+        )
+
+        if "__interrupt__" in result:
+            return {
+                "status": "approval_required",
+                "thread_id": request.thread_id,
+                "approval_request": result["__interrupt__"][0].value
+            }
+
+        return {
+            "status": "completed",
+            "thread_id": request.thread_id,
+            "result": result.get("result")
+        }
+
+    except Exception as e:
+        print("AGENT ERROR:", repr(e))
+        raise HTTPException(
+            status_code=500,
+            detail="Agent execution failed."
+        )
+
+
+        
