@@ -7,3 +7,10 @@ pypdf
 python-dotenv
 sentence-transformers
 chromadb
+langgraph
+pytest
+httpx
+ruff
+streamlit
+google-genai
+groq

@@ -129,12 +129,13 @@ def article_sort_key(article_no):
 
 
 
-def parse_articles(page_texts):
-    """Extract individual articles, starting from actual Article 1 text."""
 
-    # Find the actual Article 1 page, not the Table of Contents.
+def parse_articles(page_texts):
+    """Extract articles page by page to avoid false headings across pages."""
+
     start_page_index = None
 
+    # Find the actual Article 1 page, not the Table of Contents.
     for i, item in enumerate(page_texts):
         text = item["text"]
 
@@ -148,39 +149,41 @@ def parse_articles(page_texts):
     if start_page_index is None:
         raise ValueError("Actual Article 1 text not found.")
 
-    # Ignore all pages before actual Article 1.
     actual_pages = page_texts[start_page_index:]
 
-    full_text = ""
-    page_ranges = []
-
-    for item in actual_pages:
-        start = len(full_text)
-        full_text += item["text"] + " "
-        end = len(full_text)
-
-        page_ranges.append({
-            "start": start,
-            "end": end,
-            "page": item["page"]
-        })
-
-    # Article headings must end with an em dash or en dash.
+    # This is the same pattern that successfully detected
+    # Articles 36, 37, 38, 39, 49, 50, 51 and 51A.
     pattern = re.compile(
-        r"(?<![A-Za-z0-9])"
-        r"(?P<number>\d{1,3}[A-Z]?)\.\s+"
-        r"(?P<title>[A-Z][^—–]{2,180}?)"
-        r"\s*[—–]"
+        r"(?m)^[ \t]*"
+        r"(?P<number>\d{1,3}[A-Z]?)\.[ \t]+"
+        r"(?P<title>[^ \t\u2014\u2013][^\u2014\u2013]{1,200}?)"
+        r"[ \t]*[\u2014\u2013]"
     )
 
-    matches = list(pattern.finditer(full_text))
+    full_text = ""
+    matches = []
+
+    # Process each page separately.
+    for item in actual_pages:
+        page_text = item["text"]
+        page_offset = len(full_text)
+
+        for match in pattern.finditer(page_text):
+            matches.append({
+                "number": match.group("number"),
+                "title": match.group("title").strip(" .\t\n"),
+                "start": page_offset + match.start(),
+                "end": page_offset + match.end(),
+                "page": item["page"]
+            })
+
+        full_text += page_text + "\n"
 
     valid_matches = []
     last_key = (-1, "")
 
     for match in matches:
-        article_no = match.group("number")
-        current_key = article_sort_key(article_no)
+        current_key = article_sort_key(match["number"])
 
         if current_key > last_key:
             valid_matches.append(match)
@@ -189,42 +192,34 @@ def parse_articles(page_texts):
     records = []
 
     for index, match in enumerate(valid_matches):
-        article_no = match.group("number")
-        title = match.group("title").strip(" .")
-
-        content_start = match.end()
+        content_start = match["end"]
 
         content_end = (
-            valid_matches[index + 1].start()
+            valid_matches[index + 1]["start"]
             if index + 1 < len(valid_matches)
             else len(full_text)
         )
 
         article_text = full_text[content_start:content_end].strip()
+        article_text = re.sub(r"\s+", " ", article_text)
 
-        source_page = get_page_for_position(
-            match.start(),
-            page_ranges
-        )
-
-        if not title or len(article_text) < 10:
+        if not match["title"] or len(article_text) < 10:
             continue
 
         records.append(
             Record(
-                article_no=article_no,
-                title=title,
-                part=get_part(article_no),
+                article_no=match["number"],
+                title=match["title"],
+                part=get_part(match["number"]),
                 text=article_text,
                 amended_by=[],
-                source_page=source_page
+                source_page=match["page"]
             )
         )
 
     print("Article headings detected:", len(valid_matches))
 
     return records
-
 
 def save_records(records):
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

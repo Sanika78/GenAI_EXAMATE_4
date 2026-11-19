@@ -1,0 +1,27 @@
+﻿range_start,range_end,part,part_name,chapter,title
+1,4,Part I,The Union and its Territory,,The Union and its Territory
+5,11,Part II,Citizenship,,Citizenship
+12,35,Part III,Fundamental Rights,,Fundamental Rights
+36,51,Part IV,Directive Principles of State Policy,,Directive Principles of State Policy
+51A,51A,Part IVA,Fundamental Duties,,Fundamental Duties
+52,151,Part V,The Union,Multiple Chapters,The Union
+152,237,Part VI,The States,Multiple Chapters,The States
+239,242,Part VIII,The Union Territories,,The Union Territories
+243,243O,Part IX,The Panchayats,,The Panchayats
+243P,243ZG,Part IXA,The Municipalities,,The Municipalities
+243ZH,243ZT,Part IXB,The Co-operative Societies,,The Co-operative Societies
+244,244A,Part X,The Scheduled and Tribal Areas,,The Scheduled and Tribal Areas
+245,263,Part XI,Relations between the Union and the States,,Relations between the Union and the States
+264,300A,Part XII,Finance Property Contracts and Suits,,Finance Property Contracts and Suits
+301,307,Part XIII,Trade Commerce and Intercourse,,Trade Commerce and Intercourse
+308,323,Part XIV,Services under the Union and the States,,Services under the Union and the States
+323A,323B,Part XIVA,Tribunals,,Tribunals
+324,329A,Part XV,Elections,,Elections
+330,342A,Part XVI,Special Provisions Relating to Certain Classes,,Special Provisions Relating to Certain Classes
+343,351,Part XVII,Official Language,,Official Language
+352,360,Part XVIII,Emergency Provisions,,Emergency Provisions
+361,367,Part XIX,Miscellaneous,,Miscellaneous
+368,368,Part XX,Amendment of the Constitution,,Amendment of the Constitution
+369,392,Part XXI,Temporary Transitional and Special Provisions,,Temporary Transitional and Special Provisions
+393,395,Part XXII,Short Title Commencement Authoritative Text in Hindi and Repeals,,Short Title Commencement Authoritative Text in Hindi and Repeals
+'@ | Set-Content -Path data/article_map.csv -Encoding utf8

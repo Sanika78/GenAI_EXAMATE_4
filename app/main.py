@@ -1,4 +1,3 @@
-from app.agent_loop import run_agent
 from pathlib import Path
 import json
 from app.vectorstore import semantic_search
@@ -37,15 +36,14 @@ class ChatRequest(BaseModel):
 class AskRequest(BaseModel):
     question: str
     top_k: int = 4
-class AgentRequest(BaseModel):
-    question: str = Field(..., min_length=1)
-    top_k: int = Field(default=4, ge=1, le=10)
 
 
 class AgentRequest(BaseModel):
     question: str = ""
     thread_id: str = Field(..., min_length=1)
     approved: bool | None = None
+
+    
 # -------------------------------
 # Data File Path
 # -------------------------------

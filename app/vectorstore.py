@@ -10,12 +10,14 @@ CHROMA_DIR = BASE_DIR / "chroma_db"
 
 client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 
-collection = client.get_or_create_collection(
-    name="samvidhansathi"
-)
+
+def get_collection():
+    """Always retrieve the current collection by name."""
+    return client.get_or_create_collection(name="samvidhansathi")
 
 
 def index_documents():
+    collection = get_collection()
     chunks = chunk_documents()
 
     if not chunks:
@@ -43,8 +45,8 @@ def index_documents():
 
 
 def semantic_search(query, limit=5):
+    collection = get_collection()
 
-    # Check if collection is empty
     if collection.count() == 0:
         return []
 
@@ -77,11 +79,10 @@ def semantic_search(query, limit=5):
 
 
 if __name__ == "__main__":
-
     total = index_documents()
 
     print("Indexed chunks:", total)
-    print("Stored chunks:", collection.count())
+    print("Stored chunks:", get_collection().count())
 
     results = semantic_search(
         "What is the right to life under the Constitution?"
