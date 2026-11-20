@@ -30,7 +30,7 @@ jobs:
         run: ruff check .
 
       - name: Run Pytest
-        run: pytest tests/ -v
+        run: python -m pytest tests/ -v
 
       - name: Build Docker image
         run: docker build -t samvidhansathi .
