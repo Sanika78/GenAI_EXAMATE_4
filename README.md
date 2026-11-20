@@ -1,5 +1,5 @@
 ## Checkpoint 2 – Streamlit UI
-
+![CI](https://github.com/Sanika78/GenAI_EXAMATE_4/actions/workflows/ci.yml/badge.svg)
 SamvidhanSathi now includes an interactive Streamlit interface.
 
 ### Features
