@@ -69,3 +69,48 @@ SamvidhanSathi is deployed on Render.
 - **API Documentation:** https://samvidhansathi-api.onrender.com/docs
 
 **Deployment Status:** Live
+
+
+
+## Production Notes
+
+### Performance Monitoring
+
+SamvidhanSathi includes FastAPI middleware to log request latency and HTTP status codes.
+
+Example measured results:
+
+| Metric | Measured Result |
+|---|---:|
+| Health endpoint latency | 82.41 ms |
+| First `/chat` request (cache MISS) | 3069.80 ms |
+| Repeated `/chat` request (cache HIT) | 39.96 ms |
+| Cache hit latency reduction | 98.7% |
+
+### LLM Token Monitoring
+
+Token usage is captured from provider response metadata.
+
+| Provider | Input Tokens | Output Tokens | Total |
+|---|---:|---:|---:|
+| Groq – first measured request | 358 | 450 | 808 |
+
+### Caching
+
+- Implemented an in-memory response cache.
+- Maximum cache capacity: 100 entries.
+- Repeated questions with the same prompt version reuse cached responses.
+- Cache entries are cleared when the application restarts.
+
+### Input Validation
+
+- Maximum question length: 2,000 characters.
+- Prompt version restricted to 1 or 2.
+- RAG top_k restricted to 1–10.
+- Agent thread ID limited to 100 characters.
+
+### Security Testing
+
+- Added a prompt-injection unit test.
+- Verified that Constitution-only grounding instructions remain in the constructed prompt.
+- Test result: 1 passed.

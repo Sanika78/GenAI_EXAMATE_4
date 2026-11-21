@@ -1,9 +1,8 @@
-
 import os
 import json
 import time
 from pathlib import Path
-
+from app.cache import get_response, cache_response
 from dotenv import load_dotenv
 from google import genai
 from groq import Groq
@@ -31,10 +30,7 @@ def load_prompt(filename):
 def call_gemini(prompt):
 
     api_key = os.getenv("GEMINI_API_KEY")
-    model = os.getenv(
-        "GEMINI_MODEL",
-        "gemini-3.8-flash"
-    )
+    model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
     if not api_key:
         raise ValueError("GEMINI_API_KEY is missing")
@@ -50,6 +46,16 @@ def call_gemini(prompt):
 
             if not response.text:
                 raise RuntimeError("Gemini returned an empty response")
+
+            usage = response.usage_metadata
+
+            input_tokens = usage.prompt_token_count if usage else 0
+            output_tokens = usage.candidates_token_count if usage else 0
+
+            print(
+                f"LLM TOKENS | provider=gemini | "
+                f"input={input_tokens} | output={output_tokens}"
+            )
 
             return response.text
 
@@ -67,8 +73,8 @@ def call_gemini(prompt):
                 raise
 
 
-
 def call_groq(prompt):
+
     api_key = os.getenv("GROQ_API_KEY")
     model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
@@ -85,7 +91,18 @@ def call_groq(prompt):
         response_format={"type": "json_object"}
     )
 
+    usage = response.usage
+
+    input_tokens = usage.prompt_tokens if usage else 0
+    output_tokens = usage.completion_tokens if usage else 0
+
+    print(
+        f"LLM TOKENS | provider=groq | "
+        f"input={input_tokens} | output={output_tokens}"
+    )
+
     return response.choices[0].message.content
+
 
 def parse_response(raw_response):
 
@@ -124,6 +141,15 @@ def parse_response(raw_response):
 
 def ask_llm(question, prompt_version=1):
 
+    # Check cache first
+    cached = get_response(question, prompt_version)
+
+    if cached is not None:
+        print("CACHE | HIT")
+        return cached
+
+    print("CACHE | MISS")
+
     if prompt_version == 1:
         task_prompt = load_prompt("task_prompt_1.txt")
 
@@ -135,15 +161,9 @@ def ask_llm(question, prompt_version=1):
 
     system_prompt = load_prompt("system_prompt.txt")
 
-    user_prompt = task_prompt.format(
-        question=question
-    )
+    user_prompt = task_prompt.format(question=question)
 
-    final_prompt = (
-        system_prompt
-        + "\n\n"
-        + user_prompt
-    )
+    final_prompt = system_prompt + "\n\n" + user_prompt
 
     if PROVIDER == "gemini":
         raw_response = call_gemini(final_prompt)
@@ -156,4 +176,9 @@ def ask_llm(question, prompt_version=1):
             "Unsupported provider. Choose gemini or groq."
         )
 
-    return parse_response(raw_response)
+    result = parse_response(raw_response)
+
+    # Store successful response
+    cache_response(question, prompt_version, result)
+
+    return result

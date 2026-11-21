@@ -9,7 +9,10 @@ from app.smart_search import search_records
 from app.rag import ask_with_rag
 from app.graph import run_graph
 
+import logging
+import time
 
+from fastapi import Request
 # -------------------------------
 # FastAPI Application
 # -------------------------------
@@ -20,29 +23,60 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# -------------------------------
+# Production Logging
+# -------------------------------
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+logger = logging.getLogger("samvidhansathi")
+
+
+@app.middleware("http")
+async def log_request_latency(request: Request, call_next):
+
+    start_time = time.perf_counter()
+    status_code = 500
+
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+
+    finally:
+        latency_ms = (time.perf_counter() - start_time) * 1000
+
+        logger.info(
+            "%s %s | %.2f ms | status=%s",
+            request.method,
+            request.url.path,
+            latency_ms,
+            status_code
+        )
 # -------------------------------
 # Request Models
 # -------------------------------
 
 class QuestionRequest(BaseModel):
-    question: str = Field(..., min_length=1)
+    question: str = Field(..., min_length=1, max_length=2000)
 
 
 class ChatRequest(BaseModel):
-    question: str
-    prompt_version: int = 1
+    question: str = Field(..., min_length=1, max_length=2000)
+    prompt_version: int = Field(default=1, ge=1, le=2)
+
 
 class AskRequest(BaseModel):
-    question: str
-    top_k: int = 4
-
+    question: str = Field(..., min_length=1, max_length=2000)
+    top_k: int = Field(default=4, ge=1, le=10)
 
 class AgentRequest(BaseModel):
-    question: str = ""
-    thread_id: str = Field(..., min_length=1)
+    question: str = Field(default="", max_length=2000)
+    thread_id: str = Field(..., min_length=1, max_length=100)
     approved: bool | None = None
-
     
 # -------------------------------
 # Data File Path
