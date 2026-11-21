@@ -56,3 +56,16 @@ git push origin feature/day-12-ci-demo
 - Code quality checks using Ruff.
 - Automated tests using Pytest.
 - Docker image build verification.
+
+
+## Live Deployment
+
+## Live Deployment
+
+SamvidhanSathi is deployed on Render.
+
+- **Live API:** https://samvidhansathi-api.onrender.com
+- **Health Check:** https://samvidhansathi-api.onrender.com/health
+- **API Documentation:** https://samvidhansathi-api.onrender.com/docs
+
+**Deployment Status:** Live
