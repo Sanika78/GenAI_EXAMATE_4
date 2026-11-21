@@ -3,11 +3,24 @@ from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-model = SentenceTransformer(MODEL_NAME)
+model = None
+
+
+def get_model():
+    global model
+
+    if model is None:
+        print("Loading Sentence Transformer model...")
+        model = SentenceTransformer(MODEL_NAME)
+        print("Embedding model loaded successfully.")
+
+    return model
 
 
 def generate_embeddings(texts):
-    embeddings = model.encode(
+    embedding_model = get_model()
+
+    embeddings = embedding_model.encode(
         texts,
         convert_to_numpy=True,
         normalize_embeddings=True
