@@ -1,6 +1,4 @@
 
-from sentence_transformers import SentenceTransformer
-
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 model = None
@@ -11,7 +9,15 @@ def get_model():
 
     if model is None:
         print("Loading Sentence Transformer model...")
-        model = SentenceTransformer(MODEL_NAME)
+
+        # Import only when embeddings are actually required
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(
+            MODEL_NAME,
+            device="cpu"
+        )
+
         print("Embedding model loaded successfully.")
 
     return model
