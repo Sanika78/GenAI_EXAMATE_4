@@ -1,4 +1,4 @@
-
+import re
 from pathlib import Path
 import chromadb
 
@@ -44,12 +44,47 @@ def index_documents():
     return len(chunks)
 
 
+
 def semantic_search(query, limit=5):
     collection = get_collection()
 
-    if collection.count() == 0:
+    if collection.count() == 0 or not query.strip():
         return []
 
+    # 1. Check for an exact article-number request.
+    article_match = re.search(
+        r"\barticle\s+(\d+[a-z]?)\b",
+        query,
+        re.IGNORECASE
+    )
+
+    if article_match:
+        requested_article = article_match.group(1).upper()
+
+        exact = collection.get(
+            where={"article_no": requested_article},
+            include=["documents", "metadatas"]
+        )
+
+        if exact["ids"]:
+            matches = []
+
+            for i, chunk_id in enumerate(exact["ids"]):
+                metadata = exact["metadatas"][i]
+
+                matches.append({
+                    "id": chunk_id,
+                    "text": exact["documents"][i],
+                    "title": metadata.get("title"),
+                    "source": metadata.get("source"),
+                    "page": metadata.get("page"),
+                    "article_no": metadata.get("article_no"),
+                    "distance": 0.0
+                })
+
+            return matches[:limit]
+
+    # 2. Use semantic search for normal questions.
     query_embedding = generate_embeddings([query])[0]
 
     results = collection.query(
@@ -76,7 +111,6 @@ def semantic_search(query, limit=5):
         })
 
     return matches
-
 
 if __name__ == "__main__":
     total = index_documents()
