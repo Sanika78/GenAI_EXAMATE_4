@@ -45,13 +45,12 @@ def index_documents():
 
 
 
-def semantic_search(query, limit=5):
-    collection = get_collection()
 
-    if collection.count() == 0 or not query.strip():
+def semantic_search(query, limit=5):
+    if not query.strip():
         return []
 
-    # 1. Check for an exact article-number request.
+    # 1. Handle exact article-number questions directly from records.json.
     article_match = re.search(
         r"\barticle\s+(\d+[a-z]?)\b",
         query,
@@ -59,32 +58,35 @@ def semantic_search(query, limit=5):
     )
 
     if article_match:
-        requested_article = article_match.group(1).upper()
+        requested_article = article_match.group(1).lower()
 
-        exact = collection.get(
-            where={"article_no": requested_article},
-            include=["documents", "metadatas"]
-        )
+        source_chunks = chunk_documents()
 
-        if exact["ids"]:
-            matches = []
+        exact_matches = [
+            chunk for chunk in source_chunks
+            if str(chunk.get("article_no", "")).lower() == requested_article
+        ]
 
-            for i, chunk_id in enumerate(exact["ids"]):
-                metadata = exact["metadatas"][i]
-
-                matches.append({
-                    "id": chunk_id,
-                    "text": exact["documents"][i],
-                    "title": metadata.get("title"),
-                    "source": metadata.get("source"),
-                    "page": metadata.get("page"),
-                    "article_no": metadata.get("article_no"),
+        if exact_matches:
+            return [
+                {
+                    "id": chunk["id"],
+                    "text": chunk["text"],
+                    "title": chunk["title"],
+                    "source": chunk["source"],
+                    "page": chunk["page"],
+                    "article_no": chunk["article_no"],
                     "distance": 0.0
-                })
+                }
+                for chunk in exact_matches[:limit]
+            ]
 
-            return matches[:limit]
+    # 2. Use ChromaDB for normal semantic questions.
+    collection = get_collection()
 
-    # 2. Use semantic search for normal questions.
+    if collection.count() == 0:
+        return []
+
     query_embedding = generate_embeddings([query])[0]
 
     results = collection.query(
@@ -111,6 +113,7 @@ def semantic_search(query, limit=5):
         })
 
     return matches
+
 
 if __name__ == "__main__":
     total = index_documents()
