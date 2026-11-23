@@ -83,11 +83,13 @@ flowchart TD
 
 ## Live Deployment
 
-**Live API:** https://samvidhansathi-api.onrender.com
+**Live Frontend (Streamlit):** https://samvidhansathi.streamlit.app/
+
+**Live API (Render):** https://samvidhansathi-api.onrender.com
 
 **Health Check:** https://samvidhansathi-api.onrender.com/health
 
-**API Documentation:** https://samvidhansathi-api.onrender.com/docs
+**API Documentation (Swagger):** https://samvidhansathi-api.onrender.com/docs
 
 Deployment platform: Render
 
