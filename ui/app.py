@@ -19,7 +19,10 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_FILE = BASE_DIR / "data" / "records.json"
 FEEDBACK_FILE = BASE_DIR / "ui" / "feedback.csv"
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+API_URL = os.getenv(
+    "API_URL",
+    "https://samvidhansathi-api.onrender.com"
+)
 
 # ---------------- LOAD DATA ----------------
 
